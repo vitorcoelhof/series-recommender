@@ -19,25 +19,40 @@ export default function Home() {
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [recommendation, setRecommendation] = useState<RecommendationWithData | null>(null)
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   async function handleEnrich() {
     const titles = parseSeriesList(rawInput)
     setParsedTitles(titles)
     setLoading(true)
+    setError(null)
     setStep(2)
-    const data = await enrichSeries(titles)
-    setEnrichedSeries(data)
-    setLoading(false)
-    setStep(3)
+    try {
+      const data = await enrichSeries(titles)
+      setEnrichedSeries(data)
+      setStep(3)
+    } catch (e) {
+      setError('Erro ao buscar dados das séries. Tente novamente.')
+      setStep(1)
+    } finally {
+      setLoading(false)
+    }
   }
 
   async function handleRecommend() {
     const topTen = enrichedSeries.filter((s) => selected.has(s.title))
     setLoading(true)
+    setError(null)
     setStep(4)
-    const result = await getRecommendationAction(parsedTitles, topTen)
-    setRecommendation(result)
-    setLoading(false)
+    try {
+      const result = await getRecommendationAction(parsedTitles, topTen)
+      setRecommendation(result)
+    } catch (e) {
+      setError('Erro ao gerar recomendação. Tente novamente.')
+      setStep(3)
+    } finally {
+      setLoading(false)
+    }
   }
 
   function toggleSelect(title: string) {
@@ -55,10 +70,16 @@ export default function Home() {
   async function handleNewRecommendation() {
     const topTen = enrichedSeries.filter((s) => selected.has(s.title))
     setLoading(true)
+    setError(null)
     setRecommendation(null)
-    const result = await getRecommendationAction(parsedTitles, topTen)
-    setRecommendation(result)
-    setLoading(false)
+    try {
+      const result = await getRecommendationAction(parsedTitles, topTen)
+      setRecommendation(result)
+    } catch (e) {
+      setError('Erro ao gerar recomendação. Tente novamente.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -67,6 +88,12 @@ export default function Home() {
       <p className="text-zinc-400 text-center mb-8">Descubra sua próxima série favorita</p>
 
       <StepIndicator currentStep={step} />
+
+      {error && (
+        <div className="mb-6 p-4 bg-red-950 border border-red-800 rounded-xl text-red-300 text-sm text-center">
+          {error}
+        </div>
+      )}
 
       {/* Etapa 1: Input */}
       {step === 1 && (
