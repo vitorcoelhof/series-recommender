@@ -1,8 +1,8 @@
 interface StepIndicatorProps {
-  currentStep: 1 | 2 | 3 | 4
+  currentStep: 1 | 2 | 3
 }
 
-const steps = ['Lista', 'Enriquecimento', 'Top 10', 'Recomendação']
+const steps = ['Lista', 'Analisando', 'Resultado']
 
 export function StepIndicator({ currentStep }: StepIndicatorProps) {
   return (

@@ -24,21 +24,14 @@ async function enrichItem(item: RecommendationItem): Promise<RecommendationItemW
 
 export async function getRecommendationAction(
   watchedTitles: string[],
-  topTen: Pick<SeriesData, 'title' | 'genres' | 'imdbRating'>[]
+  favorites: string[]
 ): Promise<RecommendationWithData> {
-  try {
-    console.log('[getRecommendationAction] GEMINI_API_KEY set:', !!process.env.GEMINI_API_KEY)
-    const recommendations = await getRecommendations(watchedTitles, topTen)
-    console.log('[getRecommendationAction] Gemini returned series:', recommendations.series.length, 'movies:', recommendations.movies.length)
+  const recommendations = await getRecommendations(watchedTitles, favorites)
 
-    const [series, movies] = await Promise.all([
-      Promise.all(recommendations.series.map(enrichItem)),
-      Promise.all(recommendations.movies.map(enrichItem)),
-    ])
+  const [series, movies] = await Promise.all([
+    Promise.all(recommendations.series.map(enrichItem)),
+    Promise.all(recommendations.movies.map(enrichItem)),
+  ])
 
-    return { series, movies }
-  } catch (e) {
-    console.error('[getRecommendationAction] ERROR:', e)
-    throw e
-  }
+  return { series, movies }
 }

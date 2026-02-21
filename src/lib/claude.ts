@@ -1,5 +1,4 @@
 import { GoogleGenAI } from '@google/genai'
-import type { SeriesData } from './omdb'
 
 export interface RecommendationItem {
   title: string
@@ -13,22 +12,19 @@ export interface RecommendationsResponse {
 
 export async function getRecommendations(
   watchedTitles: string[],
-  topTen: Pick<SeriesData, 'title' | 'genres' | 'imdbRating'>[]
+  favorites: string[]
 ): Promise<RecommendationsResponse> {
   const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY })
 
-  const topTenFormatted = topTen
-    .map((s) => `- ${s.title} (${s.genres.join(', ')}) — IMDB: ${s.imdbRating}`)
-    .join('\n')
+  const favoritesSection = favorites.length > 0
+    ? `Os favoritos do usuário (séries que mais gostou) são:\n${favorites.map((t) => `- ${t}`).join('\n')}\n\n`
+    : ''
 
   const prompt = `Você é um especialista em séries e filmes.
 
 O usuário já assistiu estas séries: ${watchedTitles.join(', ')}.
 
-Os favoritos do usuário são:
-${topTenFormatted}
-
-Com base no gosto do usuário, recomende:
+${favoritesSection}Com base no gosto do usuário, recomende:
 - 5 SÉRIES que o usuário ainda não assistiu
 - 5 FILMES que combinam com o perfil do usuário
 

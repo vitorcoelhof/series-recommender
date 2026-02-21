@@ -3,14 +3,13 @@
 import { useState } from 'react'
 import { VITOR_SERIES } from '@/data/vitor-series'
 import { StepIndicator } from '@/components/StepIndicator'
-import { SeriesCard } from '@/components/SeriesCard'
 import { parseSeriesList } from '@/lib/parser'
-import { enrichSeries } from '../actions/enrichSeries'
 import { getRecommendationAction } from '../actions/getRecommendation'
-import type { SeriesData } from '@/lib/omdb'
 import type { RecommendationWithData, RecommendationItemWithData } from '../actions/getRecommendation'
 
-type Step = 1 | 2 | 3 | 4
+type Step = 1 | 2 | 3
+
+const parsedTitles = parseSeriesList(VITOR_SERIES)
 
 function RecommendationItemCard({ item }: { item: RecommendationItemWithData }) {
   return (
@@ -47,47 +46,13 @@ function RecommendationItemCard({ item }: { item: RecommendationItemWithData }) 
 
 export default function VitorPage() {
   const [step, setStep] = useState<Step>(1)
-  const parsedTitles = parseSeriesList(VITOR_SERIES)
-  const [enrichedSeries, setEnrichedSeries] = useState<SeriesData[]>([])
-  const [selected, setSelected] = useState<Set<string>>(new Set())
+  const [favorites, setFavorites] = useState<Set<string>>(new Set())
   const [recommendation, setRecommendation] = useState<RecommendationWithData | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  async function handleEnrich() {
-    setLoading(true)
-    setError(null)
-    setStep(2)
-    try {
-      const data = await enrichSeries(parsedTitles)
-      setEnrichedSeries(data)
-      setStep(3)
-    } catch (e) {
-      setError('Erro ao buscar dados das séries. Tente novamente.')
-      setStep(1)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  async function handleRecommend() {
-    const topTen = enrichedSeries.filter((s) => selected.has(s.title))
-    setLoading(true)
-    setError(null)
-    setStep(4)
-    try {
-      const result = await getRecommendationAction(parsedTitles, topTen)
-      setRecommendation(result)
-    } catch (e) {
-      setError('Erro ao gerar recomendação. Tente novamente.')
-      setStep(3)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  function toggleSelect(title: string) {
-    setSelected((prev) => {
+  function toggleFavorite(title: string) {
+    setFavorites((prev) => {
       const next = new Set(prev)
       if (next.has(title)) { next.delete(title) }
       else if (next.size < 10) { next.add(title) }
@@ -95,15 +60,30 @@ export default function VitorPage() {
     })
   }
 
+  async function handleSubmit() {
+    setLoading(true)
+    setError(null)
+    setStep(2)
+    try {
+      const result = await getRecommendationAction(parsedTitles, [...favorites])
+      setRecommendation(result)
+      setStep(3)
+    } catch {
+      setError('Erro ao gerar recomendação. Tente novamente.')
+      setStep(1)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   async function handleNewRecommendation() {
-    const topTen = enrichedSeries.filter((s) => selected.has(s.title))
     setLoading(true)
     setError(null)
     setRecommendation(null)
     try {
-      const result = await getRecommendationAction(parsedTitles, topTen)
+      const result = await getRecommendationAction(parsedTitles, [...favorites])
       setRecommendation(result)
-    } catch (e) {
+    } catch {
       setError('Erro ao gerar recomendação. Tente novamente.')
     } finally {
       setLoading(false)
@@ -123,89 +103,85 @@ export default function VitorPage() {
         </div>
       )}
 
-      {/* Etapa 1: Confirmação da lista */}
+      {/* Etapa 1: Lista + seleção opcional de favoritos */}
       {step === 1 && (
         <div className="space-y-4">
-          <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-4 max-h-64 overflow-y-auto">
-            {parsedTitles.map((title, i) => (
-              <p key={i} className="text-zinc-300 text-sm py-0.5">
-                <span className="text-zinc-600 mr-2">{i + 1}.</span>{title}
-              </p>
-            ))}
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-zinc-400">
+              <span className="text-white font-medium">{parsedTitles.length} séries</span> na lista
+              {favorites.size > 0 && (
+                <span className="text-green-400 ml-2">· {favorites.size} favorita{favorites.size !== 1 ? 's' : ''} selecionada{favorites.size !== 1 ? 's' : ''}</span>
+              )}
+            </p>
+            <span className="text-xs text-zinc-600">Selecione até 10 favoritas (opcional)</span>
           </div>
+
+          <div className="bg-zinc-900 border border-zinc-700 rounded-xl divide-y divide-zinc-800 max-h-72 overflow-y-auto">
+            {parsedTitles.map((title) => {
+              const checked = favorites.has(title)
+              return (
+                <label
+                  key={title}
+                  className={`flex items-center gap-3 px-4 py-2 cursor-pointer transition
+                    ${checked ? 'bg-zinc-800' : 'hover:bg-zinc-800/50'}
+                    ${!checked && favorites.size >= 10 ? 'opacity-40 cursor-not-allowed' : ''}`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    disabled={!checked && favorites.size >= 10}
+                    onChange={() => toggleFavorite(title)}
+                    className="accent-white w-4 h-4 flex-shrink-0"
+                  />
+                  <span className="text-zinc-300 text-sm">{title}</span>
+                </label>
+              )
+            })}
+          </div>
+
           <button
-            onClick={handleEnrich}
+            onClick={handleSubmit}
             className="w-full py-3 bg-white text-black font-semibold rounded-xl hover:bg-zinc-100 transition"
           >
-            Buscar dados das séries →
+            {favorites.size > 0
+              ? `Ver recomendações baseadas nos meus ${favorites.size} favoritos →`
+              : 'Ver recomendações →'}
           </button>
         </div>
       )}
 
       {/* Etapa 2: Loading */}
-      {step === 2 && loading && (
+      {step === 2 && (
         <div className="text-center py-20">
-          <p className="text-zinc-400 text-lg">Buscando dados no OMDb...</p>
-          <p className="text-zinc-600 text-sm mt-2">{parsedTitles.length} séries</p>
+          <p className="text-zinc-400 text-lg">Analisando seu gosto... ✨</p>
+          <p className="text-zinc-600 text-sm mt-2">{parsedTitles.length} séries na lista</p>
         </div>
       )}
 
-      {/* Etapa 3: Seleção de favoritos */}
-      {step === 3 && (
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
-            <p className="text-zinc-400 text-sm">Selecione seus <span className="text-white font-semibold">favoritos</span> (até 10)</p>
-            <span className={`text-sm font-medium ${selected.size > 0 ? 'text-green-400' : 'text-zinc-400'}`}>
-              {selected.size} selecionados
-            </span>
-          </div>
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
-            {enrichedSeries.map((s) => (
-              <SeriesCard key={s.title} series={s} selectable selected={selected.has(s.title)} onClick={() => toggleSelect(s.title)} />
-            ))}
-          </div>
-          <button onClick={handleRecommend} disabled={selected.size === 0} className="w-full py-3 bg-white text-black font-semibold rounded-xl disabled:opacity-40 hover:bg-zinc-100 transition">
-            Ver minhas recomendações →
-          </button>
-        </div>
-      )}
-
-      {/* Etapa 4: Resultados */}
-      {step === 4 && (
+      {/* Etapa 3: Resultado */}
+      {step === 3 && recommendation && (
         <div className="space-y-10">
-          {loading && !recommendation && (
-            <p className="text-zinc-400 py-20 text-center">Analisando seu gosto... ✨</p>
-          )}
-
-          {recommendation && (
-            <>
-              {/* Séries */}
-              <section className="space-y-4">
-                <h2 className="text-lg font-semibold text-white tracking-wide">📺 Séries para você</h2>
-                <div className="space-y-3">
-                  {recommendation.series.map((item) => (
-                    <RecommendationItemCard key={item.title} item={item} />
-                  ))}
-                </div>
-              </section>
-
-              {/* Filmes */}
-              <section className="space-y-4">
-                <h2 className="text-lg font-semibold text-white tracking-wide">🎬 Filmes para você</h2>
-                <div className="space-y-3">
-                  {recommendation.movies.map((item) => (
-                    <RecommendationItemCard key={item.title} item={item} />
-                  ))}
-                </div>
-              </section>
-
-              <div className="text-center pt-2">
-                <button onClick={handleNewRecommendation} disabled={loading} className="px-6 py-3 border border-zinc-700 text-white font-medium rounded-xl hover:border-zinc-500 transition disabled:opacity-40">
-                  Gerar novas recomendações
-                </button>
-              </div>
-            </>
-          )}
+          <section className="space-y-4">
+            <h2 className="text-lg font-semibold text-white tracking-wide">📺 Séries para você</h2>
+            <div className="space-y-3">
+              {recommendation.series.map((item) => (
+                <RecommendationItemCard key={item.title} item={item} />
+              ))}
+            </div>
+          </section>
+          <section className="space-y-4">
+            <h2 className="text-lg font-semibold text-white tracking-wide">🎬 Filmes para você</h2>
+            <div className="space-y-3">
+              {recommendation.movies.map((item) => (
+                <RecommendationItemCard key={item.title} item={item} />
+              ))}
+            </div>
+          </section>
+          <div className="text-center pt-2">
+            <button onClick={handleNewRecommendation} disabled={loading} className="px-6 py-3 border border-zinc-700 text-white font-medium rounded-xl hover:border-zinc-500 transition disabled:opacity-40">
+              Gerar novas recomendações
+            </button>
+          </div>
         </div>
       )}
     </main>
