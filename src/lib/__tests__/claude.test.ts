@@ -5,7 +5,7 @@ jest.mock('@anthropic-ai/sdk', () => ({
   default: jest.fn().mockImplementation(() => ({
     messages: {
       create: jest.fn().mockResolvedValue({
-        content: [{ text: '{"title":"The Wire","reason":"Similar to Breaking Bad in its depth."}' }],
+        content: [{ type: 'text', text: '{"title":"The Wire","reason":"Similar to Breaking Bad in its depth."}' }],
       }),
     },
   })),

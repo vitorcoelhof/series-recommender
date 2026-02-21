@@ -35,6 +35,15 @@ Responda APENAS em JSON válido, sem markdown, sem explicações:
     messages: [{ role: 'user', content: prompt }],
   })
 
-  const text = (message.content[0] as { text: string }).text
-  return JSON.parse(text) as Recommendation
+  const block = message.content[0]
+  if (block.type !== 'text') throw new Error(`Unexpected content type: ${block.type}`)
+
+  // Strip markdown fences if the model wraps the JSON despite instructions
+  const text = block.text.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '').trim()
+
+  try {
+    return JSON.parse(text) as Recommendation
+  } catch {
+    throw new Error(`Failed to parse recommendation JSON: ${text}`)
+  }
 }
