@@ -22,7 +22,7 @@ Cole sua lista, marque seus favoritos e receba 5 sugestões de séries + 5 filme
 
 - [Next.js 16](https://nextjs.org/) — App Router + Server Actions
 - [Tailwind CSS](https://tailwindcss.com/) — estilização
-- [Google Gemini 2.5 Flash](https://ai.google.dev/) — geração de recomendações por IA
+- [Groq](https://console.groq.com/) (Llama 3.3 70B) — geração de recomendações por IA
 - [OMDb API](https://www.omdbapi.com/) — dados de séries e filmes (poster, rating, gênero)
 - [JustWatch GraphQL API](https://www.justwatch.com/) — disponibilidade em streaming no Brasil
 
@@ -39,7 +39,7 @@ Cole sua lista, marque seus favoritos e receba 5 sugestões de séries + 5 filme
 
 - Node.js 18+
 - Chave da [OMDb API](https://www.omdbapi.com/apikey.aspx) (gratuita)
-- Chave da [Google Gemini API](https://aistudio.google.com/) (gratuita)
+- Chave da [Groq API](https://console.groq.com/) (gratuita, 14.400 req/dia)
 
 ### Instalação
 
@@ -55,7 +55,7 @@ Crie um arquivo `.env.local` na raiz do projeto:
 
 ```env
 OMDB_API_KEY=sua_chave_aqui
-GEMINI_API_KEY=sua_chave_aqui
+GROQ_API_KEY=sua_chave_aqui
 ```
 
 ### Rodando localmente
@@ -68,7 +68,7 @@ Acesse [http://localhost:3000](http://localhost:3000)
 
 ## Deploy
 
-O projeto está configurado para deploy na [Vercel](https://vercel.com/). Após conectar o repositório, adicione as variáveis de ambiente `OMDB_API_KEY` e `GEMINI_API_KEY` em **Settings → Environment Variables**.
+O projeto está configurado para deploy na [Vercel](https://vercel.com/). Após conectar o repositório, adicione as variáveis de ambiente `OMDB_API_KEY` e `GROQ_API_KEY` em **Settings → Environment Variables**.
 
 ## Testes
 

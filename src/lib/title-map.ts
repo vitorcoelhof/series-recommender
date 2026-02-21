@@ -10,7 +10,7 @@ const TITLE_MAP: Record<string, string> = {
   'la casa de papel': 'Money Heist',
   'dexter: ressureição': 'Dexter: New Blood',
   'dexter: pecado original': 'Dexter: Original Sin',
-  'dr house': 'House M.D.',
+  'dr house': 'House',
   'blacklist': 'The Blacklist',
 }
 
