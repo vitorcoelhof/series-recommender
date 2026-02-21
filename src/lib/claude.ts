@@ -1,4 +1,4 @@
-import Anthropic from '@anthropic-ai/sdk'
+import { GoogleGenAI } from '@google/genai'
 import type { SeriesData } from './omdb'
 
 export interface Recommendation {
@@ -10,7 +10,8 @@ export async function getSeriesRecommendation(
   watchedTitles: string[],
   topTen: Pick<SeriesData, 'title' | 'genres' | 'imdbRating'>[]
 ): Promise<Recommendation> {
-  const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY })
+
   const topTenFormatted = topTen
     .map((s) => `- ${s.title} (${s.genres.join(', ')}) — IMDB: ${s.imdbRating}`)
     .join('\n')
@@ -29,17 +30,17 @@ Justifique em 2-3 frases baseando-se nos padrões do top 10.
 Responda APENAS em JSON válido, sem markdown, sem explicações:
 {"title": "Nome da Série", "reason": "Justificativa..."}`
 
-  const message = await anthropic.messages.create({
-    model: 'claude-sonnet-4-6',
-    max_tokens: 256,
-    messages: [{ role: 'user', content: prompt }],
+  const response = await ai.models.generateContent({
+    model: 'gemini-2.0-flash',
+    contents: prompt,
   })
 
-  const block = message.content[0]
-  if (block.type !== 'text') throw new Error(`Unexpected content type: ${block.type}`)
+  if (!response.text) throw new Error('Empty response from Gemini')
 
-  // Strip markdown fences if the model wraps the JSON despite instructions
-  const text = block.text.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '').trim()
+  const text = response.text
+    .replace(/^```(?:json)?\n?/, '')
+    .replace(/\n?```$/, '')
+    .trim()
 
   try {
     return JSON.parse(text) as Recommendation

@@ -1,11 +1,10 @@
 import { getSeriesRecommendation } from '../claude'
 
-jest.mock('@anthropic-ai/sdk', () => ({
-  __esModule: true,
-  default: jest.fn().mockImplementation(() => ({
-    messages: {
-      create: jest.fn().mockResolvedValue({
-        content: [{ type: 'text', text: '{"title":"The Wire","reason":"Similar to Breaking Bad in its depth."}' }],
+jest.mock('@google/genai', () => ({
+  GoogleGenAI: jest.fn().mockImplementation(() => ({
+    models: {
+      generateContent: jest.fn().mockResolvedValue({
+        text: '{"title":"The Wire","reason":"Similar to Breaking Bad in its depth."}',
       }),
     },
   })),
