@@ -56,15 +56,18 @@ Responda APENAS em JSON válido, sem markdown, sem explicações:
 
   if (!response.text) throw new Error('Empty response from Gemini')
 
-  const text = response.text
-    .replace(/^```(?:json)?\n?/, '')
-    .replace(/\n?```$/, '')
-    .trim()
+  // Extract the JSON object from anywhere in the response
+  // (handles markdown code blocks, thinking tokens, extra text, etc.)
+  const jsonMatch = response.text.match(/\{[\s\S]*\}/)
+  if (!jsonMatch) {
+    console.error('[getRecommendations] No JSON found. Raw:', response.text.substring(0, 300))
+    throw new Error('No JSON object found in Gemini response')
+  }
 
   try {
-    return JSON.parse(text) as RecommendationsResponse
+    return JSON.parse(jsonMatch[0]) as RecommendationsResponse
   } catch {
-    console.error('[getRecommendations] Failed to parse JSON. Raw text:', text)
-    throw new Error(`Failed to parse recommendations JSON: ${text}`)
+    console.error('[getRecommendations] Failed to parse JSON. Extracted:', jsonMatch[0].substring(0, 300))
+    throw new Error('Failed to parse recommendations JSON')
   }
 }
