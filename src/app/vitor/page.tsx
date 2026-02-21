@@ -121,9 +121,9 @@ export default function VitorPage() {
       {step === 3 && (
         <div className="space-y-6">
           <div className="flex items-center justify-between">
-            <p className="text-zinc-400 text-sm">Selecione seus <span className="text-white font-semibold">10 favoritos</span></p>
-            <span className={`text-sm font-medium ${selected.size === 10 ? 'text-green-400' : 'text-zinc-400'}`}>
-              {selected.size}/10 selecionados
+            <p className="text-zinc-400 text-sm">Selecione seus <span className="text-white font-semibold">favoritos</span> (até 10)</p>
+            <span className={`text-sm font-medium ${selected.size > 0 ? 'text-green-400' : 'text-zinc-400'}`}>
+              {selected.size} selecionados
             </span>
           </div>
           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
@@ -131,7 +131,7 @@ export default function VitorPage() {
               <SeriesCard key={s.title} series={s} selectable selected={selected.has(s.title)} onClick={() => toggleSelect(s.title)} />
             ))}
           </div>
-          <button onClick={handleRecommend} disabled={selected.size !== 10} className="w-full py-3 bg-white text-black font-semibold rounded-xl disabled:opacity-40 hover:bg-zinc-100 transition">
+          <button onClick={handleRecommend} disabled={selected.size === 0} className="w-full py-3 bg-white text-black font-semibold rounded-xl disabled:opacity-40 hover:bg-zinc-100 transition">
             Ver minha recomendação →
           </button>
         </div>
