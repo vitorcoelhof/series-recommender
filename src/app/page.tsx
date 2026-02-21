@@ -10,14 +10,14 @@ type Step = 1 | 2 | 3
 
 function RecommendationItemCard({ item }: { item: RecommendationItemWithData }) {
   return (
-    <div className="flex gap-4 bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-left">
+    <div className="flex gap-3 bg-zinc-900 border border-zinc-800 rounded-xl p-3 sm:p-4 text-left">
       {item.seriesData?.poster && (
-        <img src={item.seriesData.poster} alt={item.title} className="w-16 h-24 object-cover rounded-lg flex-shrink-0" />
+        <img src={item.seriesData.poster} alt={item.title} className="w-14 h-20 sm:w-16 sm:h-24 object-cover rounded-lg flex-shrink-0" />
       )}
       <div className="flex flex-col gap-1 min-w-0">
-        <h3 className="text-white font-semibold text-base leading-tight">{item.title}</h3>
+        <h3 className="text-white font-semibold text-sm sm:text-base leading-tight">{item.title}</h3>
         {item.seriesData && (
-          <div className="flex flex-wrap gap-2 text-xs text-zinc-400">
+          <div className="flex flex-wrap gap-1.5 text-xs text-zinc-400">
             <span>⭐ {item.seriesData.imdbRating}</span>
             <span>{item.seriesData.year}</span>
             <span className="truncate">{item.seriesData.genres.join(', ')}</span>
@@ -30,7 +30,7 @@ function RecommendationItemCard({ item }: { item: RecommendationItemWithData }) 
             ))}
           </div>
         )}
-        <p className="text-zinc-400 text-sm mt-1 leading-relaxed">{item.reason}</p>
+        <p className="text-zinc-400 text-xs sm:text-sm mt-1 leading-relaxed">{item.reason}</p>
       </div>
     </div>
   )
@@ -91,9 +91,9 @@ export default function Home() {
   }
 
   return (
-    <main className="min-h-screen px-4 py-12 max-w-4xl mx-auto">
-      <h1 className="text-3xl font-bold text-center mb-2">Series Recommender</h1>
-      <p className="text-zinc-400 text-center mb-8">Descubra sua próxima série favorita</p>
+    <main className="min-h-screen px-4 py-8 sm:py-12 max-w-4xl mx-auto">
+      <h1 className="text-2xl sm:text-3xl font-bold text-center mb-2">Series Recommender</h1>
+      <p className="text-zinc-400 text-center mb-6 sm:mb-8">Descubra sua próxima série favorita</p>
 
       <StepIndicator currentStep={step} />
 
@@ -129,11 +129,11 @@ export default function Home() {
 
           {parsedTitles.length > 0 && (
             <div className="space-y-3">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
                 <p className="text-sm text-zinc-400">
                   <span className="text-white font-medium">{parsedTitles.length} séries</span> carregadas
                   {favorites.size > 0 && (
-                    <span className="text-green-400 ml-2">· {favorites.size} favorita{favorites.size !== 1 ? 's' : ''} selecionada{favorites.size !== 1 ? 's' : ''}</span>
+                    <span className="text-green-400 ml-2">· {favorites.size} selecionada{favorites.size !== 1 ? 's' : ''}</span>
                   )}
                 </p>
                 <span className="text-xs text-zinc-600">Selecione até 10 favoritas (opcional)</span>
@@ -162,10 +162,10 @@ export default function Home() {
               </div>
               <button
                 onClick={handleSubmit}
-                className="w-full py-3 bg-white text-black font-semibold rounded-xl hover:bg-zinc-100 transition"
+                className="w-full py-3 bg-white text-black font-semibold rounded-xl hover:bg-zinc-100 transition text-sm sm:text-base"
               >
                 {favorites.size > 0
-                  ? `Ver recomendações baseadas nos meus ${favorites.size} favoritos →`
+                  ? `Ver recomendações (${favorites.size} favorito${favorites.size !== 1 ? 's' : ''}) →`
                   : 'Ver recomendações →'}
               </button>
             </div>
