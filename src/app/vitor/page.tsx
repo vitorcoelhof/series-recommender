@@ -4,12 +4,13 @@ import { useState } from 'react'
 import { VITOR_SERIES } from '@/data/vitor-series'
 import { StepIndicator } from '@/components/StepIndicator'
 import { parseSeriesList } from '@/lib/parser'
+import { toEnglishTitle } from '@/lib/title-map'
 import { getRecommendationAction } from '../actions/getRecommendation'
 import type { RecommendationWithData, RecommendationItemWithData } from '../actions/getRecommendation'
 
 type Step = 1 | 2 | 3
 
-const parsedTitles = parseSeriesList(VITOR_SERIES)
+const parsedTitles = parseSeriesList(VITOR_SERIES).map(toEnglishTitle)
 
 function RecommendationItemCard({ item }: { item: RecommendationItemWithData }) {
   return (
