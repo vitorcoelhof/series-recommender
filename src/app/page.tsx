@@ -126,13 +126,14 @@ export default function Home() {
         </div>
       )}
 
-      {/* Etapa 3: Seleção Top 10 */}
+      {/* Etapa 3: Seleção de favoritos */}
       {step === 3 && (
         <div className="space-y-6">
-          <div className="flex items-center justify-between">
+          {/* Contador sticky */}
+          <div className="sticky top-0 z-10 -mx-4 px-4 py-2 bg-zinc-950/90 backdrop-blur border-b border-zinc-800 flex items-center justify-between">
             <p className="text-zinc-400 text-sm">Selecione seus <span className="text-white font-semibold">favoritos</span> (até 10)</p>
-            <span className={`text-sm font-medium ${selected.size > 0 ? 'text-green-400' : 'text-zinc-400'}`}>
-              {selected.size} selecionados
+            <span className={`text-sm font-semibold ${selected.size > 0 ? 'text-green-400' : 'text-zinc-500'}`}>
+              {selected.size} selecionado{selected.size !== 1 ? 's' : ''}
             </span>
           </div>
           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3">
@@ -158,39 +159,78 @@ export default function Home() {
 
       {/* Etapa 4: Recomendação */}
       {step === 4 && (
-        <div className="text-center space-y-6">
+        <div className="space-y-10">
           {loading && !recommendation && (
-            <p className="text-zinc-400 py-20">Analisando seu gosto... ✨</p>
+            <p className="text-zinc-400 py-20 text-center">Analisando seu gosto... ✨</p>
           )}
           {recommendation && (
-            <div className="space-y-6">
-              <p className="text-zinc-400 text-sm uppercase tracking-widest">Sua próxima série é</p>
-              <h2 className="text-4xl font-bold">{recommendation.title}</h2>
-              {recommendation.seriesData && (
-                <div className="flex flex-col items-center gap-4">
-                  {recommendation.seriesData.poster && (
-                    <div className="relative w-40 rounded-xl overflow-hidden">
-                      <img src={recommendation.seriesData.poster} alt={recommendation.title} className="w-full" />
+            <>
+              <section className="space-y-4">
+                <h2 className="text-lg font-semibold text-white tracking-wide">📺 Séries para você</h2>
+                <div className="space-y-3">
+                  {recommendation.series.map((item) => (
+                    <div key={item.title} className="flex gap-4 bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-left">
+                      {item.seriesData?.poster && (
+                        <img src={item.seriesData.poster} alt={item.title} className="w-16 h-24 object-cover rounded-lg flex-shrink-0" />
+                      )}
+                      <div className="flex flex-col gap-1 min-w-0">
+                        <h3 className="text-white font-semibold text-base">{item.title}</h3>
+                        {item.seriesData && (
+                          <div className="flex flex-wrap gap-2 text-xs text-zinc-400">
+                            <span>⭐ {item.seriesData.imdbRating}</span>
+                            <span>{item.seriesData.year}</span>
+                            <span>{item.seriesData.genres.join(', ')}</span>
+                          </div>
+                        )}
+                        {item.streamingServices.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {item.streamingServices.map((s) => (
+                              <span key={s} className="px-2 py-0.5 text-xs bg-zinc-800 border border-zinc-700 rounded-full text-zinc-300">{s}</span>
+                            ))}
+                          </div>
+                        )}
+                        <p className="text-zinc-400 text-sm mt-1 leading-relaxed">{item.reason}</p>
+                      </div>
                     </div>
-                  )}
-                  <div className="flex gap-4 text-sm text-zinc-400">
-                    <span>⭐ {recommendation.seriesData.imdbRating}</span>
-                    <span>{recommendation.seriesData.year}</span>
-                    <span>{recommendation.seriesData.genres.join(', ')}</span>
-                  </div>
+                  ))}
                 </div>
-              )}
-              <p className="text-zinc-300 text-base max-w-lg mx-auto leading-relaxed">
-                {recommendation.reason}
-              </p>
-              <button
-                onClick={handleNewRecommendation}
-                disabled={loading}
-                className="px-6 py-3 border border-zinc-700 text-white font-medium rounded-xl hover:border-zinc-500 transition disabled:opacity-40"
-              >
-                Gerar outra recomendação
-              </button>
-            </div>
+              </section>
+              <section className="space-y-4">
+                <h2 className="text-lg font-semibold text-white tracking-wide">🎬 Filmes para você</h2>
+                <div className="space-y-3">
+                  {recommendation.movies.map((item) => (
+                    <div key={item.title} className="flex gap-4 bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-left">
+                      {item.seriesData?.poster && (
+                        <img src={item.seriesData.poster} alt={item.title} className="w-16 h-24 object-cover rounded-lg flex-shrink-0" />
+                      )}
+                      <div className="flex flex-col gap-1 min-w-0">
+                        <h3 className="text-white font-semibold text-base">{item.title}</h3>
+                        {item.seriesData && (
+                          <div className="flex flex-wrap gap-2 text-xs text-zinc-400">
+                            <span>⭐ {item.seriesData.imdbRating}</span>
+                            <span>{item.seriesData.year}</span>
+                            <span>{item.seriesData.genres.join(', ')}</span>
+                          </div>
+                        )}
+                        {item.streamingServices.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {item.streamingServices.map((s) => (
+                              <span key={s} className="px-2 py-0.5 text-xs bg-zinc-800 border border-zinc-700 rounded-full text-zinc-300">{s}</span>
+                            ))}
+                          </div>
+                        )}
+                        <p className="text-zinc-400 text-sm mt-1 leading-relaxed">{item.reason}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+              <div className="text-center pt-2">
+                <button onClick={handleNewRecommendation} disabled={loading} className="px-6 py-3 border border-zinc-700 text-white font-medium rounded-xl hover:border-zinc-500 transition disabled:opacity-40">
+                  Gerar novas recomendações
+                </button>
+              </div>
+            </>
           )}
         </div>
       )}

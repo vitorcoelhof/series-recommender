@@ -1,37 +1,60 @@
 import { GoogleGenAI } from '@google/genai'
 import type { SeriesData } from './omdb'
 
-export interface Recommendation {
+export interface RecommendationItem {
   title: string
   reason: string
 }
 
-export async function getSeriesRecommendation(
+export interface RecommendationsResponse {
+  series: RecommendationItem[]
+  movies: RecommendationItem[]
+}
+
+export async function getRecommendations(
   watchedTitles: string[],
   topTen: Pick<SeriesData, 'title' | 'genres' | 'imdbRating'>[]
-): Promise<Recommendation> {
+): Promise<RecommendationsResponse> {
   const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY })
 
   const topTenFormatted = topTen
     .map((s) => `- ${s.title} (${s.genres.join(', ')}) — IMDB: ${s.imdbRating}`)
     .join('\n')
 
-  const prompt = `Você é um especialista em séries de TV.
+  const prompt = `Você é um especialista em séries e filmes.
 
 O usuário já assistiu estas séries: ${watchedTitles.join(', ')}.
 
-Os 10 favoritos do usuário são:
+Os favoritos do usuário são:
 ${topTenFormatted}
 
-Recomende UMA série que o usuário ainda não assistiu.
-A série NÃO pode estar na lista de séries já assistidas.
-Justifique em 2-3 frases baseando-se nos padrões do top 10.
+Com base no gosto do usuário, recomende:
+- 5 SÉRIES que o usuário ainda não assistiu
+- 5 FILMES que combinam com o perfil do usuário
+
+Nenhuma série recomendada pode estar na lista de séries já assistidas.
+Para cada item, justifique em 1-2 frases baseando-se nos padrões dos favoritos.
 
 Responda APENAS em JSON válido, sem markdown, sem explicações:
-{"title": "Nome da Série", "reason": "Justificativa..."}`
+{
+  "series": [
+    {"title": "Nome da Série", "reason": "Justificativa..."},
+    {"title": "Nome da Série", "reason": "Justificativa..."},
+    {"title": "Nome da Série", "reason": "Justificativa..."},
+    {"title": "Nome da Série", "reason": "Justificativa..."},
+    {"title": "Nome da Série", "reason": "Justificativa..."}
+  ],
+  "movies": [
+    {"title": "Nome do Filme", "reason": "Justificativa..."},
+    {"title": "Nome do Filme", "reason": "Justificativa..."},
+    {"title": "Nome do Filme", "reason": "Justificativa..."},
+    {"title": "Nome do Filme", "reason": "Justificativa..."},
+    {"title": "Nome do Filme", "reason": "Justificativa..."}
+  ]
+}`
 
   const response = await ai.models.generateContent({
-    model: 'gemini-2.0-flash',
+    model: 'gemini-2.5-flash',
     contents: prompt,
   })
 
@@ -43,8 +66,9 @@ Responda APENAS em JSON válido, sem markdown, sem explicações:
     .trim()
 
   try {
-    return JSON.parse(text) as Recommendation
+    return JSON.parse(text) as RecommendationsResponse
   } catch {
-    throw new Error(`Failed to parse recommendation JSON: ${text}`)
+    console.error('[getRecommendations] Failed to parse JSON. Raw text:', text)
+    throw new Error(`Failed to parse recommendations JSON: ${text}`)
   }
 }

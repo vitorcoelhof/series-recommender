@@ -8,9 +8,42 @@ import { parseSeriesList } from '@/lib/parser'
 import { enrichSeries } from '../actions/enrichSeries'
 import { getRecommendationAction } from '../actions/getRecommendation'
 import type { SeriesData } from '@/lib/omdb'
-import type { RecommendationWithData } from '../actions/getRecommendation'
+import type { RecommendationWithData, RecommendationItemWithData } from '../actions/getRecommendation'
 
 type Step = 1 | 2 | 3 | 4
+
+function RecommendationItemCard({ item }: { item: RecommendationItemWithData }) {
+  return (
+    <div className="flex gap-4 bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-left">
+      {item.seriesData?.poster && (
+        <img src={item.seriesData.poster} alt={item.title} className="w-16 h-24 object-cover rounded-lg flex-shrink-0" />
+      )}
+      <div className="flex flex-col gap-1 min-w-0">
+        <h3 className="text-white font-semibold text-base leading-tight">{item.title}</h3>
+        {item.seriesData && (
+          <div className="flex flex-wrap gap-2 text-xs text-zinc-400">
+            <span>⭐ {item.seriesData.imdbRating}</span>
+            <span>{item.seriesData.year}</span>
+            <span className="truncate">{item.seriesData.genres.join(', ')}</span>
+          </div>
+        )}
+        {item.streamingServices.length > 0 && (
+          <div className="flex flex-wrap gap-1 mt-1">
+            {item.streamingServices.map((s) => (
+              <span key={s} className="px-2 py-0.5 text-xs bg-zinc-800 border border-zinc-700 rounded-full text-zinc-300">
+                {s}
+              </span>
+            ))}
+          </div>
+        )}
+        {item.streamingServices.length === 0 && (
+          <span className="text-xs text-zinc-600 mt-1">Não disponível em streaming no Brasil</span>
+        )}
+        <p className="text-zinc-400 text-sm mt-1 leading-relaxed">{item.reason}</p>
+      </div>
+    </div>
+  )
+}
 
 export default function VitorPage() {
   const [step, setStep] = useState<Step>(1)
@@ -117,7 +150,7 @@ export default function VitorPage() {
         </div>
       )}
 
-      {/* Etapa 3: Top 10 */}
+      {/* Etapa 3: Seleção de favoritos */}
       {step === 3 && (
         <div className="space-y-6">
           <div className="flex items-center justify-between">
@@ -132,34 +165,46 @@ export default function VitorPage() {
             ))}
           </div>
           <button onClick={handleRecommend} disabled={selected.size === 0} className="w-full py-3 bg-white text-black font-semibold rounded-xl disabled:opacity-40 hover:bg-zinc-100 transition">
-            Ver minha recomendação →
+            Ver minhas recomendações →
           </button>
         </div>
       )}
 
-      {/* Etapa 4: Resultado */}
+      {/* Etapa 4: Resultados */}
       {step === 4 && (
-        <div className="text-center space-y-6">
-          {loading && !recommendation && <p className="text-zinc-400 py-20">Analisando seu gosto... ✨</p>}
+        <div className="space-y-10">
+          {loading && !recommendation && (
+            <p className="text-zinc-400 py-20 text-center">Analisando seu gosto... ✨</p>
+          )}
+
           {recommendation && (
-            <div className="space-y-6">
-              <p className="text-zinc-400 text-sm uppercase tracking-widest">Sua próxima série é</p>
-              <h2 className="text-4xl font-bold">{recommendation.title}</h2>
-              {recommendation.seriesData?.poster && (
-                <img src={recommendation.seriesData.poster} alt={recommendation.title} className="w-40 mx-auto rounded-xl" />
-              )}
-              {recommendation.seriesData && (
-                <div className="flex justify-center gap-4 text-sm text-zinc-400">
-                  <span>⭐ {recommendation.seriesData.imdbRating}</span>
-                  <span>{recommendation.seriesData.year}</span>
-                  <span>{recommendation.seriesData.genres.join(', ')}</span>
+            <>
+              {/* Séries */}
+              <section className="space-y-4">
+                <h2 className="text-lg font-semibold text-white tracking-wide">📺 Séries para você</h2>
+                <div className="space-y-3">
+                  {recommendation.series.map((item) => (
+                    <RecommendationItemCard key={item.title} item={item} />
+                  ))}
                 </div>
-              )}
-              <p className="text-zinc-300 text-base max-w-lg mx-auto leading-relaxed">{recommendation.reason}</p>
-              <button onClick={handleNewRecommendation} disabled={loading} className="px-6 py-3 border border-zinc-700 text-white font-medium rounded-xl hover:border-zinc-500 transition disabled:opacity-40">
-                Gerar outra recomendação
-              </button>
-            </div>
+              </section>
+
+              {/* Filmes */}
+              <section className="space-y-4">
+                <h2 className="text-lg font-semibold text-white tracking-wide">🎬 Filmes para você</h2>
+                <div className="space-y-3">
+                  {recommendation.movies.map((item) => (
+                    <RecommendationItemCard key={item.title} item={item} />
+                  ))}
+                </div>
+              </section>
+
+              <div className="text-center pt-2">
+                <button onClick={handleNewRecommendation} disabled={loading} className="px-6 py-3 border border-zinc-700 text-white font-medium rounded-xl hover:border-zinc-500 transition disabled:opacity-40">
+                  Gerar novas recomendações
+                </button>
+              </div>
+            </>
           )}
         </div>
       )}
