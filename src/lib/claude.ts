@@ -1,4 +1,4 @@
-import { GoogleGenAI } from '@google/genai'
+import Groq from 'groq-sdk'
 
 export interface RecommendationItem {
   title: string
@@ -14,7 +14,7 @@ export async function getRecommendations(
   watchedTitles: string[],
   favorites: string[]
 ): Promise<RecommendationsResponse> {
-  const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY })
+  const groq = new Groq({ apiKey: process.env.GROQ_API_KEY })
 
   const favoritesSection = favorites.length > 0
     ? `Os favoritos do usuário (séries que mais gostou) são:\n${favorites.map((t) => `- ${t}`).join('\n')}\n\n`
@@ -49,25 +49,20 @@ Responda APENAS em JSON válido, sem markdown, sem explicações:
   ]
 }`
 
-  const response = await ai.models.generateContent({
-    model: 'gemini-2.0-flash',
-    contents: prompt,
+  const completion = await groq.chat.completions.create({
+    model: 'llama-3.3-70b-versatile',
+    messages: [{ role: 'user', content: prompt }],
+    temperature: 0.7,
+    response_format: { type: 'json_object' },
   })
 
-  if (!response.text) throw new Error('Empty response from Gemini')
-
-  // Extract the JSON object from anywhere in the response
-  // (handles markdown code blocks, thinking tokens, extra text, etc.)
-  const jsonMatch = response.text.match(/\{[\s\S]*\}/)
-  if (!jsonMatch) {
-    console.error('[getRecommendations] No JSON found. Raw:', response.text.substring(0, 300))
-    throw new Error('No JSON object found in Gemini response')
-  }
+  const text = completion.choices[0]?.message?.content
+  if (!text) throw new Error('Empty response from Groq')
 
   try {
-    return JSON.parse(jsonMatch[0]) as RecommendationsResponse
+    return JSON.parse(text) as RecommendationsResponse
   } catch {
-    console.error('[getRecommendations] Failed to parse JSON. Extracted:', jsonMatch[0].substring(0, 300))
+    console.error('[getRecommendations] Failed to parse JSON:', text.substring(0, 300))
     throw new Error('Failed to parse recommendations JSON')
   }
 }
